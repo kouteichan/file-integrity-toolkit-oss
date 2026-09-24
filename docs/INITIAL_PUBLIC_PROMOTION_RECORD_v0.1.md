@@ -1,7 +1,7 @@
 # Initial Public Promotion Record v0.1
 
 **Date:** 2026-09-24  
-**Status:** PUBLIC PROMOTION CANDIDATE / TEST PENDING / NOT MERGED
+**Status:** PUBLIC PROMOTION CANDIDATE / PUBLIC CI PASS / INDEPENDENT REVIEW PENDING / NOT MERGED
 
 ## Public boundary
 
@@ -35,6 +35,9 @@ Promoted without semantic modification:
 - `tests/test_inspect_file.py`
 - `tests/test_self_test.py`
 
+The Git blob identities of these copied files match the canonical source
+snapshot exactly.
+
 Public-specific sanitized / created artifacts:
 
 - `src/file_integrity_toolkit/__init__.py`
@@ -44,6 +47,8 @@ Public-specific sanitized / created artifacts:
 - `CONTRIBUTING.md`
 - `.github/workflows/tests.yml`
 - this promotion record
+- public candidate test-run record
+- independent-review packet
 
 ## Held from the initial public release
 
@@ -53,15 +58,49 @@ Public-specific sanitized / created artifacts:
 - remote specifications / architecture documents
 - internal review, repair, handoff, closure, planning, and dogfooding evidence
 
+## Public CI result
+
+GitHub Actions workflow:
+
+```text
+tests
+run #1
+run id = 35995212091
+```
+
+Observed results:
+
+```text
+Python 3.9  = 65 passed
+Python 3.10 = 65 passed
+Python 3.11 = 65 passed
+Python 3.12 = 65 passed
+Python 3.13 = 65 passed
+
+failed = 0
+```
+
+The CI installed the candidate with:
+
+```text
+python -m pip install -e ".[test]"
+```
+
+before running `pytest`.
+
 ## Verification state
 
 ```text
 Candidate assembled = YES
-Public snapshot pytest = PENDING
+Public snapshot CI = PASS
 Independent package review = PENDING
 Merge authorization = NO
 ```
 
-The private full-suite test count must not be reused as a public-package claim.
-The public snapshot will establish its own collected / passed / failed / skipped
-inventory.
+Boundary:
+
+```text
+Public CI PASS
+≠ Independent Review PASS
+≠ Merge Authorization
+```
