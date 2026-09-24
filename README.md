@@ -1,166 +1,154 @@
-# file-integrity-toolkit-oss
+# File Integrity Toolkit
 
-Public OSS distribution surface for **File Integrity Toolkit**.
+A small deterministic Python toolkit for **local file measurement** and
+**SHA-256 comparison**.
 
 > Do not ask the model to be exact where ordinary code can be exact.
 
-## Repository role
+This repository is the public OSS distribution surface of File Integrity
+Toolkit. Development and review are maintained separately; only material
+cleared for public distribution is promoted here.
 
-This repository is the **public OSS surface** of File Integrity Toolkit.
+## Public scope
 
-Development is maintained separately in a private canonical repository. Public
-artifacts are promoted here only after review for technical readiness, public
-scope, and IP / disclosure boundaries.
+The initial public release contains the **Local Deterministic Core**:
 
-```text
-Private Development Canonical
-→ Test
-→ Review
-→ Public / IP Boundary Check
-→ Public Readiness Check
-→ Promotion
-→ This Repository
+- inspect a local regular file
+- compute raw-content SHA-256
+- measure exact bytes read
+- verify same-read size stability
+- handle true zero-byte files
+- compare two valid SHA-256 digests deterministically
+- run a SHA-256 known-answer self-test before measurement
+
+The initial public release does **not** include remote-provider resolution,
+remote retrieval, repository mutation, repair, manifest verification, CLI,
+MCP, or an overall verification verdict.
+
+## Install from source
+
+```bash
+git clone https://github.com/kouteichan/file-integrity-toolkit-oss.git
+cd file-integrity-toolkit-oss
+python -m pip install -e .
 ```
 
-Important:
+For development / tests:
 
-```text
-Public OSS Repository
-≠
-Second Development Canonical
+```bash
+python -m pip install -e ".[test]"
+pytest
 ```
 
-The public repository should contain only material that is intentionally
-approved for public distribution.
+## Quick start
 
-## Current status
+```python
+from file_integrity_toolkit import inspect_file, compare_sha256
 
-```text
-Repository = PUBLIC
-License = Apache License 2.0
-Public OSS initialization = IN PROGRESS
-Initial core promotion = NOT YET PERFORMED
+measured = inspect_file("artifact.bin")
+
+if measured["status"] == "OK":
+    print(measured["data"]["size_bytes"])
+    print(measured["data"]["sha256"])
+
+expected = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+comparison = compare_sha256(expected, expected)
+
+assert comparison["status"] == "MATCH"
 ```
 
-The repository is intentionally being initialized before the first audited code
-promotion. The absence of source code here does not mean the underlying project
-is only conceptual; it means the public distribution boundary is being created
-separately from private development history.
+## Result semantics
 
-## Purpose
-
-File Integrity Toolkit is intended to provide deterministic file-integrity
-operations for AI agents, automated workflows, and ordinary software.
-
-The project direction is to move exact byte-level work out of model reasoning
-and into deterministic code.
-
-Core conceptual boundary:
+Local measurement returns:
 
 ```text
-Measurement Fact
-≠
-Comparison Fact
-≠
-Verification Verdict
+OK
+or
+ERROR
 ```
 
-The toolkit should report deterministic facts without silently turning them
-into broader project or governance conclusions.
-
-## Planned initial public scope
-
-The first audited promotion is expected to focus on generic, reusable
-functionality such as:
-
-- local file measurement
-- SHA-256 calculation
-- exact size measurement
-- deterministic SHA-256 comparison
-- read-only remote artifact resolution
-- exact-byte retrieval
-- canonical in-memory measurement
-- regression tests
-- public-safe specifications and usage documentation
-
-Each item remains subject to public-readiness and IP-boundary review before it
-is promoted here.
-
-## Out of scope for the initial public surface
-
-The initial public OSS surface is not intended to include:
-
-- private research artifacts
-- unpublished patent-candidate mechanisms
-- LMT / POS-specific proprietary implementation details
-- repository write / mutation workflows
-- repair automation
-- migration authority
-- overall verification verdicts such as `PASS` / `FAIL`
-- private credentials or internal environment configuration
-
-Generic public interfaces may later be used by private or public systems
-without requiring those systems' internal mechanisms to be published here.
-
-## Public-boundary rule
+Direct SHA-256 comparison returns:
 
 ```text
-Generic reusable mechanism
-→ eligible for public review
-
-Private research / patent candidate
-→ keep outside this repository until separately cleared
+MATCH
+MISMATCH
+or
+ERROR
 ```
 
-A name, concept, or external project reference is not itself the deciding
-factor. The deciding question is whether the material exposes technical content
-that should remain private or be reviewed before publication.
+A `MATCH` means only that two valid SHA-256 digest strings are equal after
+the documented normalization. It is **not** an overall project or artifact
+verification verdict.
 
-## Development direction
+## Core API
 
-The long-term direction is:
+### `inspect_file(file_path)`
+
+Measures a local regular file in one read pass.
+
+On success, the result includes:
+
+- raw-content SHA-256
+- `size_bytes`
+- observed size before / after the read
+- stability signals checked
+
+Required stability relation:
 
 ```text
-One deterministic core
-→ Thin application facade
-→ Multiple integration surfaces
+stat_size_before == bytes_read == stat_size_after
 ```
 
-Possible future integration surfaces include:
+### `calculate_sha256(file_path)`
 
-- Python API
-- CLI
-- AI tool adapter
-- MCP adapter
-- plugin / app integration
-- HTTP / service API
+Thin wrapper over `inspect_file()`.
 
-These are integration candidates, not requirements for the first public
-release.
+### `get_file_size(file_path)`
+
+Thin wrapper over `inspect_file()`.
+
+### `compare_sha256(expected, actual)`
+
+Validates and compares two raw-content SHA-256 strings.
+
+Accepted normalization:
+
+- surrounding ASCII whitespace is trimmed
+- uppercase / lowercase hex is accepted
+- normalized output is lowercase
+
+Invalid SHA-256 representations return `ERROR`; they are not converted to
+`MISMATCH`.
+
+## Known boundaries
+
+The Local Deterministic Core does not claim:
+
+- atomic filesystem snapshot semantics
+- adversarial concurrent-mutation resistance
+- path authorization
+- artifact authority
+- trusted-reference provenance
+- manifest completeness
+- overall PASS / FAIL decisions
+
+It reports deterministic local measurement and direct comparison results only.
+
+## Repository model
+
+```text
+Private development / review
+→ public-boundary review
+→ audited promotion
+→ this repository
+```
+
+This repository is **not** a second private-development canonical.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-This repository is licensed under the **Apache License 2.0**.
-
-See [LICENSE](LICENSE).
-
-Only material that is approved for distribution under this repository's license
-should be promoted here.
-
-## Public contribution policy
-
-Contribution guidance will be added before the first public release candidate.
-
-Until then, this repository should be treated as an initializing OSS surface
-rather than a second unrestricted development workspace.
-
-## Current next step
-
-```text
-Public Repository Initialization
-→ Public IP / Content Boundary Audit
-→ Initial Promotion Whitelist
-→ Public CI / Contribution Setup
-→ First Core Snapshot Promotion
-→ Public Release Candidate Audit
-```
+Apache License 2.0. See [LICENSE](LICENSE).
